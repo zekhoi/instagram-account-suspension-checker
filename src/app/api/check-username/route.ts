@@ -13,7 +13,9 @@ async function updateProxy() {
   if (!proxy) {
     throw new Error("Failed to fetch proxy");
   }
-  axiosIGClient.defaults.httpAgent = new HttpsProxyAgent(`http://${proxy}`);
+  return new HttpsProxyAgent(`http://${proxy}`, {
+    timeout: 5000,
+  });
 }
 
 export async function POST(request: NextRequest) {
@@ -24,12 +26,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    await updateProxy();
+    const agent = await updateProxy();
     const response = await axiosIGClient.get(
       `https://www.instagram.com/${username}/`,
-      {
-        timeout: 5000,
-      }
+      { httpsAgent: agent, timeout: 5000 }
     );
 
     const html = response.data;
