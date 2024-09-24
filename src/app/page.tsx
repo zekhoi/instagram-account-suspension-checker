@@ -11,7 +11,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle, CheckCircle, ExternalLink } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle,
+  ExternalLink,
+  HelpCircle,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -31,8 +36,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type Result = { username: string; suspended: boolean };
-type FilterStatus = "all" | "active" | "suspended";
+type Result = {
+  username: string;
+  suspended: boolean | null;
+  error?: string;
+  status?: number;
+};
+
+type FilterStatus = "all" | "active" | "suspended" | "error";
 
 export default function UsernameChecker() {
   const [usernames, setUsernames] = useState("");
@@ -41,6 +52,27 @@ export default function UsernameChecker() {
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all");
+
+  const checkUsername = async (username: string): Promise<Result> => {
+    try {
+      const response = await fetch("/api/check-username", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to check username");
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error(`Error checking username ${username}:`, error);
+      return { username, suspended: null, error: "Network error" };
+    }
+  };
 
   const handleCheck = async () => {
     setIsChecking(true);
@@ -55,46 +87,32 @@ export default function UsernameChecker() {
       return;
     }
 
-    try {
-      const response = await fetch("/api/check-usernames", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ usernames: usernameList }),
-      });
+    const totalUsernames = usernameList.length;
+    let checkedUsernames = 0;
 
-      if (!response.ok) {
-        throw new Error("Failed to check usernames");
-      }
+    await Promise.all(
+      usernameList.map(async (username) => {
+        const result = await checkUsername(username.trim());
+        setResults((prev) => [...prev, result]);
+        checkedUsernames++;
+        setProgress((checkedUsernames / totalUsernames) * 100);
+      })
+    );
 
-      const data = await response.json();
-      const newResults: Result[] = data.results;
-
-      for (let i = 0; i < newResults.length; i++) {
-        setResults((prev) => [...prev, newResults[i]]);
-        setProgress((prev) => prev + 100 / newResults.length);
-        // Simulate a delay to show progress
-        await new Promise((resolve) => setTimeout(resolve, 100));
-      }
-    } catch (error) {
-      console.error("Error during username check:", error);
-      setError("An error occurred while checking usernames. Please try again.");
-    } finally {
-      setIsChecking(false);
-      setProgress(100);
-    }
+    setIsChecking(false);
   };
 
   const filteredResults = results.filter((result) => {
     if (filterStatus === "all") return true;
-    if (filterStatus === "active") return !result.suspended;
-    if (filterStatus === "suspended") return result.suspended;
+    if (filterStatus === "active") return result.suspended === false;
+    if (filterStatus === "suspended") return result.suspended === true;
+    if (filterStatus === "error") return result.suspended === null;
     return true;
   });
 
-  const suspendedCount = results.filter((r) => r.suspended).length;
-  const activeCount = results.length - suspendedCount;
+  const suspendedCount = results.filter((r) => r.suspended === true).length;
+  const activeCount = results.filter((r) => r.suspended === false).length;
+  const errorCount = results.filter((r) => r.suspended === null).length;
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
@@ -135,7 +153,7 @@ export default function UsernameChecker() {
                 <h3 className="text-lg font-semibold">Results:</h3>
                 <p className="text-sm text-muted-foreground">
                   Total: {results.length} | Active: {activeCount} | Suspended:{" "}
-                  {suspendedCount}
+                  {suspendedCount} | Error: {errorCount}
                 </p>
               </div>
               <Select
@@ -149,6 +167,7 @@ export default function UsernameChecker() {
                   <SelectItem value="all">All</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="error">Error</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -172,14 +191,24 @@ export default function UsernameChecker() {
                     {filteredResults.map((result, index) => (
                       <TableRow key={index}>
                         <TableCell>
-                          {result.suspended ? (
+                          {result.suspended === true && (
                             <AlertCircle className="h-4 w-4 text-red-500" />
-                          ) : (
+                          )}
+                          {result.suspended === false && (
                             <CheckCircle className="h-4 w-4 text-green-500" />
+                          )}
+                          {result.suspended === null && (
+                            <HelpCircle className="h-4 w-4 text-yellow-500" />
                           )}
                         </TableCell>
                         <TableCell className="font-medium">
                           {result.username}
+                          {result.error && (
+                            <span className="text-sm text-muted-foreground ml-2">
+                              Error: {result.error}
+                              {result.status && ` (Status: ${result.status})`}
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <a
