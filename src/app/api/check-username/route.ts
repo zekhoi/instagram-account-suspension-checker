@@ -1,25 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import * as cheerio from "cheerio";
-import { HttpsProxyAgent } from "https-proxy-agent";
 
 const axiosIGClient = axios.create();
-
-async function updateProxy() {
-  const response = await axiosIGClient.get(
-    "https://gimmeproxy.com/api/getProxy",
-    {
-      timeout: 5000,
-    }
-  );
-  const proxy = response.data?.ipPort;
-  if (!proxy) {
-    throw new Error("Failed to fetch proxy");
-  }
-  return new HttpsProxyAgent(`http://${proxy}`, {
-    timeout: 5000,
-  });
-}
 
 export async function POST(request: NextRequest) {
   const { username } = await request.json();
@@ -29,10 +12,9 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const agent = await updateProxy();
     const response = await axiosIGClient.get(
       `https://www.instagram.com/${username}/`,
-      { httpsAgent: agent, timeout: 5000 }
+      { timeout: 5000 }
     );
 
     const html = response.data;
