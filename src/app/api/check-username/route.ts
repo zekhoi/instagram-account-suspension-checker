@@ -1,11 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import axios from "axios";
 import * as cheerio from "cheerio";
+import { HttpsProxyAgent } from "https-proxy-agent";
 
 const axiosIGClient = axios.create();
 
+const PROXY_URL = process.env.PROXY_URL;
+
 export async function POST(request: NextRequest) {
+  let proxyAgent = null;
   const { username } = await request.json();
+  if (PROXY_URL) {
+    proxyAgent = new HttpsProxyAgent(PROXY_URL);
+  }
 
   if (!username || typeof username !== "string") {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
@@ -30,6 +37,7 @@ export async function POST(request: NextRequest) {
             "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
         },
         timeout: 5000,
+        ...(!!proxyAgent ? { httpsAgent: proxyAgent } : {}),
       }
     );
 
