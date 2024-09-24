@@ -6,14 +6,14 @@ import { HttpsProxyAgent } from "https-proxy-agent";
 const axiosIGClient = axios.create();
 
 const PROXY_URL = process.env.PROXY_URL;
+let proxyAgent: HttpsProxyAgent<string> | null = null;
+
+if (PROXY_URL) {
+  proxyAgent = new HttpsProxyAgent(PROXY_URL);
+}
 
 export async function POST(request: NextRequest) {
-  let proxyAgent = null;
   const { username } = await request.json();
-  if (PROXY_URL) {
-    proxyAgent = new HttpsProxyAgent(PROXY_URL);
-  }
-
   if (!username || typeof username !== "string") {
     return NextResponse.json({ error: "Invalid input" }, { status: 400 });
   }
