@@ -10,7 +10,33 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const response = await axios.get(`https://www.instagram.com/${username}/`);
+    const response = await axios.get(`https://www.instagram.com/${username}/`, {
+      headers: {
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.7",
+        "Cache-Control": "max-age=0",
+        Cookie:
+          "csrftoken=8itmfqOZ9pW8bR42I3y9Wk; ig_did=0C826C21-17C3-444A-ABB7-EBABD37214D7; mid=ZvL-IgAEAAGfkZ0euP6AF4ra66Mr; wd=911x794",
+        Priority: "u=0, i",
+        Referer: `https://www.instagram.com/${username}/`,
+        "Sec-CH-UA": '"Brave";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
+        "Sec-CH-UA-Full-Version-List":
+          '"Brave";v="129.0.0.0", "Not=A?Brand";v="8.0.0.0", "Chromium";v="129.0.0.0"',
+        "Sec-CH-UA-Mobile": "?0",
+        "Sec-CH-UA-Model": '""',
+        "Sec-CH-UA-Platform": '"macOS"',
+        "Sec-CH-UA-Platform-Version": '"14.6.1"',
+        "Sec-Fetch-Dest": "document",
+        "Sec-Fetch-Mode": "navigate",
+        "Sec-Fetch-Site": "same-origin",
+        "Sec-Fetch-User": "?1",
+        "Sec-GPC": "1",
+        "Upgrade-Insecure-Requests": "1",
+        "User-Agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+      },
+    });
     const html = response.data;
     const $ = cheerio.load(html);
     const metaTag = $("meta[property='og:title']").attr("content");
