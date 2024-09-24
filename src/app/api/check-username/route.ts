@@ -32,9 +32,18 @@ export async function POST(request: NextRequest) {
         },
       }
     );
+
     const html = response.data;
     const $ = cheerio.load(html);
+    const redirectUrl = $("link[rel='alternate']").attr("href");
+    const isRedirected = redirectUrl?.includes("instagram.com/accounts/login");
+
+    if (isRedirected) {
+      throw new Error("Failed to fetch profile, redirected to login page");
+    }
+
     const metaTag = $("meta[property='og:title']").attr("content");
+
     return NextResponse.json({
       username,
       suspended: !metaTag,
@@ -56,9 +65,11 @@ export async function POST(request: NextRequest) {
         suspended: null,
       });
     }
+    const errorMessage =
+      (error as Error)?.message || "An unexpected error occurred";
     return NextResponse.json({
       username,
-      error: "An unexpected error occurred",
+      error: errorMessage,
       suspended: null,
     });
   }
