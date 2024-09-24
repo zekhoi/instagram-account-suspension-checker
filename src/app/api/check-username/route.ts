@@ -44,6 +44,7 @@ export async function POST(request: NextRequest) {
         image: $("meta[property='og:image']").attr("content"),
         type: $("meta[property='og:type']").attr("content"),
         url: $("meta[property='og:url']").attr("content"),
+        fullHtml: html,
       },
     });
   } catch (error) {
