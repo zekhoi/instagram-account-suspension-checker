@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
             "csrftoken=8itmfqOZ9pW8bR42I3y9Wk; ig_did=0C826C21-17C3-444A-ABB7-EBABD37214D7; mid=ZvL-IgAEAAGfkZ0euP6AF4ra66Mr; wd=911x794",
           Priority: "u=0, i",
           Referer: `https://www.instagram.com/${username}/`,
+          "Sec-Fetch-Dest": "document",
           "Sec-Fetch-Mode": "navigate",
           "Upgrade-Insecure-Requests": "1",
           "User-Agent":
