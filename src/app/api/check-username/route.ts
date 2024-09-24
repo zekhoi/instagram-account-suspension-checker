@@ -7,7 +7,10 @@ const axiosIGClient = axios.create();
 
 async function updateProxy() {
   const response = await axiosIGClient.get(
-    "https://gimmeproxy.com/api/getProxy"
+    "https://gimmeproxy.com/api/getProxy",
+    {
+      timeout: 5000,
+    }
   );
   const proxy = response.data?.ipPort;
   if (!proxy) {
