@@ -14,7 +14,23 @@ export async function POST(request: NextRequest) {
   try {
     const response = await axiosIGClient.get(
       `https://www.instagram.com/${username}/`,
-      { timeout: 5000 }
+      {
+        headers: {
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.7",
+          "Cache-Control": "max-age=0",
+          Cookie:
+            "csrftoken=8itmfqOZ9pW8bR42I3y9Wk; ig_did=0C826C21-17C3-444A-ABB7-EBABD37214D7; mid=ZvL-IgAEAAGfkZ0euP6AF4ra66Mr; wd=911x794",
+          Priority: "u=0, i",
+          Referer: `https://www.instagram.com/${username}/`,
+          "Sec-Fetch-Dest": "document",
+          "Sec-Fetch-Mode": "navigate",
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36",
+        },
+        timeout: 5000,
+      }
     );
 
     const html = response.data;
